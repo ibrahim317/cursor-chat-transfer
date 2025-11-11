@@ -17,6 +17,11 @@
   },
   "main": "./extension.js",
   "activationEvents": [
+    "onCommand:cursorChatTransfer.export",
+    "onCommand:cursorChatTransfer.import",
+    "onCommand:cursorChatTransfer.localImport",
+    "onView:cursorChatTransfer.view",
+    "onStartupFinished"
   ],
   "contributes": {
     "viewsContainers": {
