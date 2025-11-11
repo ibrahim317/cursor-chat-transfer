@@ -1,0 +1,110 @@
+{
+  "name": "cursor-chat-transfer",
+  "displayName": "Cursor Chat Transfer",
+  "description": "Export and import Cursor chat sessions between workspaces/devices.",
+  "version": "0.0.1",
+  "publisher": "ibrahim317",
+  "icon": "resources/cursor-chat-transfer.png",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ibrahim317/cursor-chat-transfer.git"
+  },
+  "main": "./extension.js",
+  "activationEvents": [
+    "onView:cursorChatTransfer.view"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "cursorChatTransfer",
+          "title": "Cursor Chat Transfer",
+          "icon": "resources/cursor-chat-transfer.svg"
+        }
+      ]
+    },
+    "views": {
+      "cursorChatTransfer": [
+        {
+          "type": "tree",
+          "id": "cursorChatTransfer.view",
+          "name": "Transfer"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "cursorChatTransfer.export",
+        "title": "Export Chats",
+        "category": "Cursor Chat Transfer",
+        "icon": "$(export)"
+      },
+      {
+        "command": "cursorChatTransfer.import",
+        "title": "Import Chats",
+        "category": "Cursor Chat Transfer",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "cursorChatTransfer.localImport",
+        "title": "Local Import (Move Chats)",
+        "category": "Cursor Chat Transfer",
+        "icon": "$(arrow-both)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "cursorChatTransfer.export",
+          "when": "view == cursorChatTransfer.view",
+          "group": "navigation@1"
+        },
+        {
+          "command": "cursorChatTransfer.import",
+          "when": "view == cursorChatTransfer.view",
+          "group": "navigation@2"
+        },
+        {
+          "command": "cursorChatTransfer.localImport",
+          "when": "view == cursorChatTransfer.view",
+          "group": "navigation@3"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "cursorChatTransfer.export",
+          "when": "view == cursorChatTransfer.view && viewItem == export",
+          "group": "inline"
+        },
+        {
+          "command": "cursorChatTransfer.import",
+          "when": "view == cursorChatTransfer.view && viewItem == import",
+          "group": "inline"
+        },
+        {
+          "command": "cursorChatTransfer.localImport",
+          "when": "view == cursorChatTransfer.view && viewItem == localImport",
+          "group": "inline"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "postinstall": "node -e \"console.log('Ready to go')\"",
+    "package": "vsce package"
+  },
+  "dependencies": {
+    "@vscode/sqlite3": "5.1.8-vscode"
+  },
+  "devDependencies": {
+    "vsce": "^2.15.0"
+  }
+}
+
+
