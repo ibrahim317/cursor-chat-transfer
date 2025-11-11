@@ -2,7 +2,7 @@
   "name": "cursor-chat-transfer",
   "displayName": "Cursor Chat Transfer",
   "description": "Export and import Cursor chat sessions between workspaces/devices.",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "publisher": "ibrahim317",
   "icon": "resources/cursor-chat-transfer.png",
   "engines": {

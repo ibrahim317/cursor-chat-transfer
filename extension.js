@@ -71,20 +71,77 @@ async function doLocalImport() {
 		output.appendLine(`Local Import source: ${sourceWsUri.fsPath}`);
 		output.appendLine(`Local Import target: ${targetWsUri.fsPath}`);
 		output.appendLine(`Local Import global: ${glUri.fsPath}`);
+		
+		await vscode.window.withProgress({
+			location: vscode.ProgressLocation.Notification,
+			title: "Performing local chat transfer...",
+			cancellable: false
+		}, async (progress) => {
+			progress.report({ message: "Building export object..." });
+			let exp = await transferMod.buildExportObject(sourceWsUri, glUri);
+			let sourceIds = (exp.allComposers || []).map(c => c.composerId).filter(Boolean);
+			
+			output.appendLine(`\n=== ${mode.toUpperCase()} MODE DIAGNOSTICS ===`);
+			output.appendLine(`[${mode}] Found ${exp.allComposers.length} composers to transfer`);
+			output.appendLine(`[${mode}] Composers with data: ${Object.keys(exp.composers || {}).length}`);
+			output.appendLine(`[${mode}] Composers with bubbles: ${Object.keys(exp.bubbles || {}).length}`);
+			
+			// Show detailed debug info
+			if (exp.debugInfo) {
+				output.appendLine(`\n--- Debug Information ---`);
+				output.appendLine(`Total composer IDs in workspace: ${exp.debugInfo.totalComposers}`);
+				output.appendLine(`ComposerData keys found in global DB: ${exp.debugInfo.composerDataKeysFound}`);
+				output.appendLine(`Bubble keys found in global DB: ${exp.debugInfo.bubbleKeysFound}`);
+				
+				if (exp.debugInfo.composerIds.length > 0) {
+					output.appendLine(`Sample composer IDs from workspace: ${exp.debugInfo.composerIds.slice(0, 3).join(', ')}`);
+				}
+				
+				if (exp.debugInfo.sampleComposerDataKeys.length > 0) {
+					output.appendLine(`Sample composerData keys from global DB: ${exp.debugInfo.sampleComposerDataKeys.slice(0, 3).join(', ')}`);
+				} else {
+					output.appendLine(`⚠ WARNING: No composerData keys found in global DB!`);
+				}
+				
+				if (exp.debugInfo.sampleBubbleKeys.length > 0) {
+					output.appendLine(`Sample bubble keys from global DB: ${exp.debugInfo.sampleBubbleKeys.slice(0, 3).join(', ')}`);
+				}
+				
+				if (exp.debugInfo.missingComposerData.length > 0) {
+					output.appendLine(`\n⚠ Composers missing data: ${exp.debugInfo.missingComposerData.length}/${exp.debugInfo.totalComposers}`);
+					output.appendLine(`Missing IDs: ${exp.debugInfo.missingComposerData.slice(0, 3).join(', ')}${exp.debugInfo.missingComposerData.length > 3 ? '...' : ''}`);
+				}
+			}
+			output.appendLine(`---\n`);
+			
+			// Warn if no data found
+			if (exp.allComposers.length > 0 && Object.keys(exp.composers || {}).length === 0) {
+				const warning = `⚠ WARNING: Found ${exp.allComposers.length} composer(s) in workspace but no data in global storage. The composers might be empty or the wrong global DB was selected.`;
+				output.appendLine(warning);
+				vscode.window.showWarningMessage(warning);
+			}
+			
+			if (mode === 'copy') {
+				progress.report({ message: "Cloning for copy..." });
+				const { cloned } = transferMod.cloneExportObjectForCopy(exp);
+				exp = cloned;
+				output.appendLine(`[copy] Cloned ${exp.allComposers.length} composers with new IDs`);
+			}
+			
+			progress.report({ message: "Importing into target..." });
+			const inserted = await transferMod.importFromObject(exp, targetWsUri, glUri);
+			
+			if (mode === 'cut') {
+				progress.report({ message: "Removing from source..." });
+				await transferMod.removeComposersFromWorkspace(sourceWsUri, sourceIds);
+			}
 
-		let exp = await transferMod.buildExportObject(sourceWsUri, glUri);
-		let sourceIds = (exp.allComposers || []).map(c => c.composerId).filter(Boolean);
-		if (mode === 'copy') {
-			const { cloned } = transferMod.cloneExportObjectForCopy(exp);
-			exp = cloned;
-		}
-		const inserted = await transferMod.importFromObject(exp, targetWsUri, glUri);
-		if (mode === 'cut') {
-			await transferMod.removeComposersFromWorkspace(sourceWsUri, sourceIds);
-		}
+			output.appendLine(`Local Import done. KV inserted: ${inserted}`);
+			output.appendLine(`=== END DIAGNOSTICS ===\n`);
+			output.show(true);
+		});
 
-		output.appendLine(`Local Import done. KV inserted: ${inserted}`);
-		output.show(true);
+
 		const choice = await vscode.window.showInformationMessage('Local import complete. Reload Window to reflect changes?', 'Reload Window');
 		if (choice === 'Reload Window') {
 			await vscode.commands.executeCommand('workbench.action.reloadWindow');
@@ -110,54 +167,65 @@ async function doExport() {
 		const glUri = await pathsMod.quickPickGlobalDbOrBrowse(pathsMod.getDefaultCursorUserDir);
 		if (!glUri) return;
 
-		const wsDb = dbMod.openSqlite(wsUri.fsPath);
-		const composerData = await dbMod.readItemTableComposer(wsDb);
-		if (!composerData || !Array.isArray(composerData.allComposers)) {
-			vscode.window.showWarningMessage('No composer.composerData found in the selected workspace DB.');
-			wsDb.close();
-			return;
-		}
-		let allComposers = composerData.allComposers;
+		await vscode.window.withProgress({
+			location: vscode.ProgressLocation.Notification,
+			title: "Exporting chats...",
+			cancellable: false
+		}, async (progress) => {
+			progress.report({ message: "Reading workspace database..." });
+			const wsDb = await dbMod.openSqlite(wsUri.fsPath);
+			const composerData = await dbMod.readItemTableComposer(wsDb);
+			if (!composerData || !Array.isArray(composerData.allComposers)) {
+				vscode.window.showWarningMessage('No composer.composerData found in the selected workspace DB.');
+				wsDb.close();
+				return;
+			}
+			let allComposers = composerData.allComposers;
+			wsDb.close(); // Close early
 
-		// Optional selection step
-		const selectionMode = await vscode.window.showQuickPick(
-			[
-				{ label: 'Export all chats', value: 'all' },
-				{ label: 'Select chats…', value: 'select' }
-			],
-			{ title: 'Choose chats to export' }
-		);
-		if (!selectionMode) { wsDb.close(); return; }
-		if (selectionMode.value === 'select') {
-			const items = allComposers.map(c => {
-				const label = c.name || c.composerId || 'Untitled';
-				const description = c.subtitle || '';
-				const detail = c.unifiedMode ? `Mode: ${c.unifiedMode} • Updated: ${c.lastUpdatedAt || ''}` : '';
-				return { label, description, detail, picked: true, composer: c };
+			// Optional selection step
+			const selectionMode = await vscode.window.showQuickPick(
+				[
+					{ label: 'Export all chats', value: 'all' },
+					{ label: 'Select chats…', value: 'select' }
+				],
+				{ title: 'Choose chats to export' }
+			);
+			if (!selectionMode) { return; }
+			if (selectionMode.value === 'select') {
+				const items = allComposers.map(c => {
+					const label = c.name || c.composerId || 'Untitled';
+					const description = c.subtitle || '';
+					const detail = c.unifiedMode ? `Mode: ${c.unifiedMode} • Updated: ${c.lastUpdatedAt || ''}` : '';
+					return { label, description, detail, picked: true, composer: c };
+				});
+				const picked = await vscode.window.showQuickPick(items, {
+					canPickMany: true,
+					title: 'Select chats to export'
+				});
+				if (!picked) { return; }
+				allComposers = picked.map(p => p.composer);
+			}
+
+			const selectedIds = allComposers.map(c => c.composerId).filter(Boolean);
+			
+			progress.report({ message: "Building export object..." });
+			const { allComposers: finalComposers, composers, bubbles } = await transferMod.buildExportObject(wsUri, glUri, selectedIds);
+
+			const exportObj = { allComposers: finalComposers, composers, bubbles };
+			
+			progress.report({ message: "Saving to file..." });
+			const saveUri = await vscode.window.showSaveDialog({
+				title: 'Save exported Cursor chats',
+				filters: { 'Cursor Chat Export': ['cursor-chat.json'] },
+				saveLabel: 'Save Export',
+				defaultUri: vscode.Uri.file(path.join(os.homedir(), 'cursor-chat-export.cursor-chat.json'))
 			});
-			const picked = await vscode.window.showQuickPick(items, {
-				canPickMany: true,
-				title: 'Select chats to export'
-			});
-			if (!picked) { wsDb.close(); return; }
-			allComposers = picked.map(p => p.composer);
-		}
-
-		const selectedIds = allComposers.map(c => c.composerId).filter(Boolean);
-		wsDb.close();
-		// Build export with transfer module (includes bubbles)
-		const { allComposers: finalComposers, composers, bubbles } = await transferMod.buildExportObject(wsUri, glUri, selectedIds);
-
-		const exportObj = { allComposers: finalComposers, composers, bubbles };
-		const saveUri = await vscode.window.showSaveDialog({
-			title: 'Save exported Cursor chats',
-			filters: { 'Cursor Chat Export': ['cursor-chat.json'] },
-			saveLabel: 'Save Export',
-			defaultUri: vscode.Uri.file(path.join(os.homedir(), 'cursor-chat-export.cursor-chat.json'))
+			if (!saveUri) return;
+			fs.writeFileSync(saveUri.fsPath, JSON.stringify(exportObj, null, 2), 'utf8');
+			vscode.window.showInformationMessage('Cursor chats exported successfully.');
 		});
-		if (!saveUri) return;
-		fs.writeFileSync(saveUri.fsPath, JSON.stringify(exportObj, null, 2), 'utf8');
-		vscode.window.showInformationMessage('Cursor chats exported successfully.');
+
 	} catch (err) {
 		console.error(err);
 		vscode.window.showErrorMessage(`Export failed: ${err.message || String(err)}`);
@@ -194,25 +262,32 @@ async function doImport() {
 		const glUri = await pathsMod.quickPickGlobalDbOrBrowse(pathsMod.getDefaultCursorUserDir);
 		if (!glUri) return;
 
-		// Perform import via transfer module
-		const inserted = await transferMod.importFromObject(obj, wsUri, glUri);
+		await vscode.window.withProgress({
+			location: vscode.ProgressLocation.Notification,
+			title: "Importing chats...",
+			cancellable: false
+		}, async (progress) => {
+			progress.report({ message: "Importing from object..." });
+			const inserted = await transferMod.importFromObject(obj, wsUri, glUri);
 
-		// Verify write landed
-		const wsDb = dbMod.openSqlite(wsUri.fsPath);
-		const verify = (await dbMod.readItemTableComposer(wsDb)) || {};
-		wsDb.close();
-		const verifyList = Array.isArray(verify.allComposers) ? verify.allComposers : [];
-		const verifyIds = new Set(verifyList.map(c => c.composerId).filter(Boolean));
-		if (!output) output = vscode.window.createOutputChannel('Cursor Chat Transfer');
-		output.appendLine(`Import verification: ${verifyIds.size} total composers listed in workspace DB.`);
-		output.appendLine(`Import verification: attempted KV insertions ${inserted}.`);
-		output.show(true);
+			progress.report({ message: "Verifying import..." });
+			const wsDb = await dbMod.openSqlite(wsUri.fsPath);
+			const verify = (await dbMod.readItemTableComposer(wsDb)) || {};
+			wsDb.close();
+			const verifyList = Array.isArray(verify.allComposers) ? verify.allComposers : [];
+			const verifyIds = new Set(verifyList.map(c => c.composerId).filter(Boolean));
+			if (!output) output = vscode.window.createOutputChannel('Cursor Chat Transfer');
+			output.appendLine(`Import verification: ${verifyIds.size} total composers listed in workspace DB.`);
+			output.appendLine(`Import verification: attempted KV insertions ${inserted}.`);
+			output.show(true);
 
-		const msg = `Import complete. Workspace composers now ${verifyIds.size}. KV inserted ${inserted}. Reload Cursor to see changes.`;
-		const choice = await vscode.window.showInformationMessage(msg, 'Reload Window');
-		if (choice === 'Reload Window') {
-			await vscode.commands.executeCommand('workbench.action.reloadWindow');
-		}
+			const msg = `Import complete. Workspace composers now ${verifyIds.size}. KV inserted ${inserted}. Reload Cursor to see changes.`;
+			const choice = await vscode.window.showInformationMessage(msg, 'Reload Window');
+			if (choice === 'Reload Window') {
+				await vscode.commands.executeCommand('workbench.action.reloadWindow');
+			}
+		});
+
 	} catch (err) {
 		console.error(err);
 		vscode.window.showErrorMessage(`Import failed: ${err.message || String(err)}`);
