@@ -37,6 +37,13 @@ Transfer your AI chat conversations between Cursor IDE workspaces and devices wi
 
 3. Follow the prompts to select workspaces and files
 
+### Alternative: Command Palette
+
+You can also access all features through the Command Palette (Cmd/Ctrl+Shift+P):
+- `Cursor Chat Transfer: Export Chats`
+- `Cursor Chat Transfer: Import Chats`
+- `Cursor Chat Transfer: Local Import (Move Chats)`
+
 ## ⚠️ Important
 
 **After importing or moving chats, you MUST completely close and reopen Cursor IDE for the chats to appear.** Simply reloading the window (Cmd/Ctrl+R) is not sufficient. Cursor loads chat data on startup, so a full restart is required to see the transferred conversations.
