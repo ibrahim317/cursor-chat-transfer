@@ -16,6 +16,8 @@
     "url": "https://github.com/ibrahim317/cursor-chat-transfer.git"
   },
   "main": "./extension.js",
+  "activationEvents": [
+  ],
   "contributes": {
     "viewsContainers": {
       "activitybar": [
