@@ -5,11 +5,11 @@ Transfer your AI chat conversations between Cursor IDE workspaces and devices wi
   <a href="https://github.com/ibrahim317/cursor-chat-transfer/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/ibrahim317/cursor-chat-transfer?style=for-the-badge&color=fabd2f" alt="License" />
   </a>
-  <a href="https://marketplace.visualstudio.com/items?itemName=ibrahim317.cursor-chat-transfer">
-    <img src="https://img.shields.io/visual-studio-marketplace/v/ibrahim317.cursor-chat-transfer?style=for-the-badge&label=VS%20Marketplace&color=83a598" alt="Visual Studio Marketplace Version" />
+  <a href="https://open-vsx.org/extension/ibrahim317/cursor-chat-transfer">
+    <img src="https://img.shields.io/open-vsx/v/ibrahim317/cursor-chat-transfer?style=for-the-badge&label=Open%20VSX&color=83a598" alt="Open VSX Version" />
   </a>
-  <a href="https://marketplace.visualstudio.com/items?itemName=ibrahim317.cursor-chat-transfer">
-    <img src="https://img.shields.io/visual-studio-marketplace/i/ibrahim317.cursor-chat-transfer?style=for-the-badge&color=d3869b" alt="Visual Studio Marketplace Installs" />
+  <a href="https://open-vsx.org/extension/ibrahim317/cursor-chat-transfer">
+    <img src="https://img.shields.io/open-vsx/dt/ibrahim317/cursor-chat-transfer?style=for-the-badge&color=d3869b" alt="Open VSX Downloads" />
   </a>
 </p>
 
