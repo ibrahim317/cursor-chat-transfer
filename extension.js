@@ -129,7 +129,8 @@ async function doLocalImport() {
 			}
 			
 			progress.report({ message: "Importing into target..." });
-			const inserted = await transferMod.importFromObject(exp, targetWsUri, glUri);
+			const result = await transferMod.importFromObject(exp, targetWsUri, glUri);
+			const inserted = result.inserted;
 			
 			if (mode === 'cut') {
 				progress.report({ message: "Removing from source..." });
@@ -268,20 +269,16 @@ async function doImport() {
 			cancellable: false
 		}, async (progress) => {
 			progress.report({ message: "Importing from object..." });
-			const inserted = await transferMod.importFromObject(obj, wsUri, glUri);
+			const result = await transferMod.importFromObject(obj, wsUri, glUri);
+			const { inserted, verification } = result;
 
-			progress.report({ message: "Verifying import..." });
-			const wsDb = await dbMod.openSqlite(wsUri.fsPath);
-			const verify = (await dbMod.readItemTableComposer(wsDb)) || {};
-			wsDb.close();
-			const verifyList = Array.isArray(verify.allComposers) ? verify.allComposers : [];
-			const verifyIds = new Set(verifyList.map(c => c.composerId).filter(Boolean));
+			// Verification info is already included in the result, no need to reopen DB
 			if (!output) output = vscode.window.createOutputChannel('Cursor Chat Transfer');
-			output.appendLine(`Import verification: ${verifyIds.size} total composers listed in workspace DB.`);
+			output.appendLine(`Import verification: ${verification.totalComposers} total composers listed in workspace DB.`);
 			output.appendLine(`Import verification: attempted KV insertions ${inserted}.`);
 			output.show(true);
 
-			const msg = `Import complete. Workspace composers now ${verifyIds.size}. KV inserted ${inserted}. Reload Cursor to see changes.`;
+			const msg = `Import complete. Workspace composers now ${verification.totalComposers}. KV inserted ${inserted}. Reload Cursor to see changes.`;
 			const choice = await vscode.window.showInformationMessage(msg, 'Reload Window');
 			if (choice === 'Reload Window') {
 				await vscode.commands.executeCommand('workbench.action.reloadWindow');
