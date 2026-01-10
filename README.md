@@ -16,11 +16,6 @@ Transfer your AI chat conversations between Cursor IDE workspaces and devices wi
 
 ## Features
 
-### 🎨 Clean Interface
-- Dedicated sidebar with clickable items
-- Clear icons for each action (Export, Import, Local Transfer)
-- Hover tooltips with descriptions
-
 ### 📤 Export Chats
 - Export all chats or select specific ones
 - Auto-detects workspace by name and path
@@ -29,15 +24,9 @@ Transfer your AI chat conversations between Cursor IDE workspaces and devices wi
 
 ### 📥 Import Chats
 - Import from exported files
-- Safe merge (no overwrites)
+- Creates copies with new IDs (safe for re-importing)
 - Auto-detects target workspace
 - Preserves all chat data and conversation history
-
-### 🔄 Local Import (Move Chats)
-- **Copy**: Duplicate chats with new IDs (default) - fully independent copies
-- **Cut**: Move chats from source to target workspace
-- **Ref**: Link to existing chats (shared references)
-- Auto-targets current workspace for convenience
 
 ## Usage
 
@@ -45,7 +34,6 @@ Transfer your AI chat conversations between Cursor IDE workspaces and devices wi
 2. Click any action:
    - **Export Chats** → Save chats to file for backup or transfer
    - **Import Chats** → Load chats from exported file
-   - **Local Import** → Copy/move between workspaces on the same machine
 
 3. Follow the prompts to select workspaces and files
 
@@ -54,11 +42,10 @@ Transfer your AI chat conversations between Cursor IDE workspaces and devices wi
 You can also access all features through the Command Palette (Cmd/Ctrl+Shift+P):
 - `Cursor Chat Transfer: Export Chats`
 - `Cursor Chat Transfer: Import Chats`
-- `Cursor Chat Transfer: Local Import (Move Chats)`
 
 ## ⚠️ Important
 
-**After importing or moving chats, you MUST completely close and reopen Cursor IDE for the chats to appear.** Simply reloading the window (Cmd/Ctrl+R) is not sufficient. Cursor loads chat data on startup, so a full restart is required to see the transferred conversations.
+**After importing chats, you MUST completely close and reopen Cursor IDE for the chats to appear.** Simply reloading the window (Cmd/Ctrl+R) is not sufficient. Cursor loads chat data on startup, so a full restart is required to see the transferred conversations.
 
 ## Why Use This?
 
@@ -78,10 +65,24 @@ Works seamlessly across platforms:
 
 The extension shows workspace names and folder paths (not internal hashes) for easy identification.
 
+## Troubleshooting
+
+### Large Databases
+This extension has a ~1.8GB database size limit for reading. If your global database exceeds this limit, try:
+1. **Clear old chat history** in Cursor settings
+2. **Export specific chats** instead of all at once
+3. **Delete old workspace folders** in Cursor's `workspaceStorage` directory
+
+### sqlite3 Required
+This extension requires `sqlite3` CLI to be installed for write operations. It's usually pre-installed on:
+- **Linux**: Most distributions
+- **macOS**: Pre-installed
+- **Windows**: May need to install from [sqlite.org](https://sqlite.org/download.html)
+
 ## Requirements
 
 - Cursor IDE with chat composer feature
-- Node.js (for development only)
+- `sqlite3` CLI (usually pre-installed on Linux/macOS)
 
 ## License
 
@@ -89,4 +90,4 @@ MIT
 
 ---
 
-*Technical Note: The extension reads Cursor's internal SQLite databases to access and transfer chat data while respecting the integrity of your workspace.*
+*Technical Note: The extension uses sql.js for reading and the system's sqlite3 CLI for writing, ensuring proper handling of WAL mode databases while Cursor is running.*

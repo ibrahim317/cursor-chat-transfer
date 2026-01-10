@@ -2,7 +2,7 @@
   "name": "cursor-chat-transfer",
   "displayName": "Cursor Chat Transfer",
   "description": "Export and import Cursor chat sessions between workspaces/devices.",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "publisher": "ibrahim317",
   "icon": "resources/cursor-chat-transfer.png",
   "engines": {
@@ -19,7 +19,6 @@
   "activationEvents": [
     "onCommand:cursorChatTransfer.export",
     "onCommand:cursorChatTransfer.import",
-    "onCommand:cursorChatTransfer.localImport",
     "onView:cursorChatTransfer.view",
     "onStartupFinished"
   ],
@@ -54,12 +53,6 @@
         "title": "Import Chats",
         "category": "Cursor Chat Transfer",
         "icon": "$(cloud-download)"
-      },
-      {
-        "command": "cursorChatTransfer.localImport",
-        "title": "Local Import (Move Chats)",
-        "category": "Cursor Chat Transfer",
-        "icon": "$(arrow-both)"
       }
     ],
     "menus": {
@@ -73,11 +66,6 @@
           "command": "cursorChatTransfer.import",
           "when": "view == cursorChatTransfer.view",
           "group": "navigation@2"
-        },
-        {
-          "command": "cursorChatTransfer.localImport",
-          "when": "view == cursorChatTransfer.view",
-          "group": "navigation@3"
         }
       ],
       "view/item/context": [
@@ -90,25 +78,19 @@
           "command": "cursorChatTransfer.import",
           "when": "view == cursorChatTransfer.view && viewItem == import",
           "group": "inline"
-        },
-        {
-          "command": "cursorChatTransfer.localImport",
-          "when": "view == cursorChatTransfer.view && viewItem == localImport",
-          "group": "inline"
         }
       ]
     }
   },
   "scripts": {
-    "postinstall": "node -e \"console.log('Ready to go')\"",
-    "package": "vsce package"
+    "postinstall": "echo 'Ready to go'",
+    "package": "vsce package",
+    "package:all": "vsce package"
   },
   "dependencies": {
     "sql.js": "^1.10.3"
   },
   "devDependencies": {
-    "vsce": "^2.15.0"
+    "@vscode/vsce": "^2.24.0"
   }
 }
-
-
