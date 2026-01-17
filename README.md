@@ -77,12 +77,21 @@ This extension has a ~1.8GB database size limit for reading. If your global data
 This extension requires `sqlite3` CLI to be installed for write operations. It's usually pre-installed on:
 - **Linux**: Most distributions
 - **macOS**: Pre-installed
-- **Windows**: May need to install from [sqlite.org](https://sqlite.org/download.html)
+
+**Windows Installation:**
+1. Download `sqlite-tools-win-x64-*.zip` from [sqlite.org](https://sqlite.org/download.html)
+2. Extract `sqlite3.exe` to one of these locations (the extension will auto-detect):
+   - `C:\sqlite3\sqlite3.exe` (recommended)
+   - `C:\Program Files\sqlite3\sqlite3.exe`
+   - Any directory in your system PATH
+3. Alternatively, install via package manager:
+   - **Chocolatey**: `choco install sqlite`
+   - **Scoop**: `scoop install sqlite`
 
 ## Requirements
 
 - Cursor IDE with chat composer feature
-- `sqlite3` CLI (usually pre-installed on Linux/macOS)
+- `sqlite3` CLI (pre-installed on Linux/macOS, see above for Windows)
 
 ## License
 
