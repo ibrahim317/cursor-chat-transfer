@@ -16,13 +16,13 @@ Transfer your AI chat conversations between Cursor IDE workspaces and devices wi
 
 ## Features
 
-### 📤 Export Chats
+### Export Chats
 - Export all chats or select specific ones
 - Auto-detects workspace by name and path
 - Saves to `.cursor-chat.json` format
 - Includes all messages and bubbles
 
-### 📥 Import Chats
+### Import Chats
 - Import from exported files
 - Creates copies with new IDs (safe for re-importing)
 - Auto-detects target workspace
@@ -43,7 +43,7 @@ You can also access all features through the Command Palette (Cmd/Ctrl+Shift+P):
 - `Cursor Chat Transfer: Export Chats`
 - `Cursor Chat Transfer: Import Chats`
 
-## ⚠️ Important
+## Important
 
 **After importing chats, you MUST completely close and reopen Cursor IDE for the chats to appear.** Simply reloading the window (Cmd/Ctrl+R) is not sufficient. Cursor loads chat data on startup, so a full restart is required to see the transferred conversations.
 
