@@ -68,13 +68,13 @@ The extension shows workspace names and folder paths (not internal hashes) for e
 ## Troubleshooting
 
 ### Large Databases
-This extension has a ~1.8GB database size limit for reading. If your global database exceeds this limit, try:
+If your global database is very large and export feels slow, try:
 1. **Clear old chat history** in Cursor settings
 2. **Export specific chats** instead of all at once
 3. **Delete old workspace folders** in Cursor's `workspaceStorage` directory
 
 ### sqlite3 Required
-This extension requires `sqlite3` CLI to be installed for write operations. It's usually pre-installed on:
+This extension requires `sqlite3` CLI to be installed for all database operations (read and write). It's usually pre-installed on:
 - **Linux**: Most distributions
 - **macOS**: Pre-installed
 
@@ -99,4 +99,4 @@ MIT
 
 ---
 
-*Technical Note: The extension uses sql.js for reading and the system's sqlite3 CLI for writing, ensuring proper handling of WAL mode databases while Cursor is running.*
+*Technical Note: The extension uses the system `sqlite3` CLI for both reading and writing, which handles WAL mode databases while Cursor is running.*

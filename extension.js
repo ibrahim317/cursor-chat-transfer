@@ -118,13 +118,7 @@ async function doExport() {
 	} catch (err) {
 		console.error(err);
 		
-		// Provide helpful error message for large files
 		let errorMessage = `Export failed: ${err.message || String(err)}`;
-		if (err.message && err.message.includes('greater than')) {
-			errorMessage = 'Export failed: Your global database is too large (>1.5GB). ' +
-				'This extension uses in-memory SQLite which has size limitations. ' +
-				'Try clearing old chat history in Cursor to reduce the database size.';
-		}
 		
 		vscode.window.showErrorMessage(errorMessage);
 	}

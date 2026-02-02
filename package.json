@@ -2,7 +2,7 @@
   "name": "cursor-chat-transfer",
   "displayName": "Cursor Chat Transfer",
   "description": "Export and import Cursor chat sessions between workspaces/devices.",
-"version": "0.0.8",
+  "version": "0.0.9",
   "publisher": "ibrahim317",
   "icon": "resources/cursor-chat-transfer.png",
   "engines": {
@@ -88,7 +88,7 @@
     "package:all": "vsce package"
   },
   "dependencies": {
-    "sql.js": "^1.10.3"
+    
   },
   "devDependencies": {
     "@vscode/vsce": "^2.24.0"
