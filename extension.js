@@ -63,14 +63,17 @@ async function doExport() {
 		}, async (progress) => {
 			progress.report({ message: "Reading workspace database..." });
 			const wsDb = await dbMod.openSqliteReadOnly(wsUri.fsPath);
-			const composerData = await dbMod.readItemTableComposer(wsDb);
+			let composerData = await dbMod.readItemTableComposer(wsDb);
 			if (!composerData || !Array.isArray(composerData.allComposers)) {
-				vscode.window.showWarningMessage('No composer.composerData found in the selected workspace DB.');
+				composerData = await dbMod.readComposerHeaders(glUri.fsPath);
+			}
+			if (!composerData || !Array.isArray(composerData.allComposers)) {
+				vscode.window.showWarningMessage('No composer data found in workspace or global DB.');
 				wsDb.closeReadOnly();
 				return;
 			}
 			let allComposers = composerData.allComposers;
-			wsDb.closeReadOnly(); // Close early
+			wsDb.closeReadOnly();
 
 			// Optional selection step
 			const selectionMode = await vscode.window.showQuickPick(
