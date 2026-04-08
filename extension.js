@@ -64,6 +64,10 @@ async function doExport() {
 			progress.report({ message: "Reading workspace database..." });
 			const wsDb = await dbMod.openSqliteReadOnly(wsUri.fsPath);
 			let composerData = await dbMod.readItemTableComposer(wsDb);
+			let workspaceComposerIds = null;
+			if (composerData && Array.isArray(composerData.selectedComposerIds)) {
+				workspaceComposerIds = new Set(composerData.selectedComposerIds);
+			}
 			if (!composerData || !Array.isArray(composerData.allComposers)) {
 				composerData = await dbMod.readComposerHeaders(glUri.fsPath);
 			}
@@ -73,6 +77,9 @@ async function doExport() {
 				return;
 			}
 			let allComposers = composerData.allComposers;
+			if (workspaceComposerIds) {
+				allComposers = allComposers.filter(c => c && workspaceComposerIds.has(c.composerId));
+			}
 			wsDb.closeReadOnly();
 
 			// Optional selection step
